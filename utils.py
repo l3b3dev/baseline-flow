@@ -218,14 +218,14 @@ def summary_pod(Xsmall, Xsmall_test, sensors, sensors_test, Xmean, sensor_locati
 
 def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
                   n_snapshots, n_snapshots_test,
-                  model, Xmean, sensor_locations, plotting, train_or_test='training'):
+                  model, Xmean, sensor_locations, plotting, train_or_test='training', re=''):
     from torch.autograd import Variable, Function
     from torch.utils.data import DataLoader, Dataset
 
     dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots))
     output_temp = model(Variable(dataloader_temp.next()).cuda().float())
     tt, _, mt = output_temp.shape
-    #        
+    #
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)
     Xsmall_temp = Xsmall.data.numpy().reshape(tt, mt)
 
@@ -263,14 +263,14 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
     # ax[0].set_ylim([0.01,1])
     plt.legend(fontsize=22)
     plt.tight_layout()
-    plt.show()
-    #plt.savefig('results/flow_spectrum_train.png', dpi=300)
+    #plt.show()
+    plt.savefig(f'out/{re}/flow_spectrum_train.png', dpi=300)
     plt.close()
 
     dataloader_temp = iter(DataLoader(sensors_test, batch_size=n_snapshots_test))
     output_temp = model(Variable(dataloader_temp.next()).cuda().float())
     tt, _, mt = output_temp.shape
-    #        
+    #
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)
     Xsmall_temp = Xsmall_test.data.numpy().reshape(tt, mt)
 
@@ -311,7 +311,7 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
     plt.legend(fontsize=22)
     plt.tight_layout()
     # plt.show()
-    plt.savefig('results/flow_spectrum_test.png', dpi=300)
+    plt.savefig(f'out/{re}/flow_spectrum_test.png', dpi=300)
     plt.close()
 
 
@@ -368,7 +368,7 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
 #     #plt.savefig('results/flow_truth.png', dpi=300)
 #     plt.close()
 
-def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean):
+def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean, re):
     import cmocean
 
     x2 = np.arange(0, m, 1)
@@ -380,7 +380,7 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean):
 
     minmax = np.max(np.abs(img)) * 0.65
     #plt.figure(facecolor="white", edgecolor='k', figsize=(7.9, 4.7))
-    fig, ax = plt.subplots(figsize=(16, 6))
+    fig, ax = plt.subplots(figsize=(6, 6))
     #plt.contourf(mX, mY, img, 80, cmap=cmocean.cm.thermal, alpha=1, vmin=-minmax, vmax=minmax)
     #plt.contour(mX, mY, img, 80, colors='black', alpha=0.5, vmin=-minmax, vmax=minmax)
     #im = plt.imshow(img, cmap=cmocean.cm.thermal, interpolation='none', vmin=-minmax, vmax=minmax)
@@ -404,8 +404,8 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean):
 
     plt.scatter(x_sensors, y_sensors, marker='.', color='purple', s=500, zorder=5)
     plt.title('Truth with sensor locations')
-    plt.show()
-    #plt.savefig('results/flow_truth_with_sensors.png', dpi=300)
+    #plt.show()
+    plt.savefig(f'out/{re}/flow_truth_with_sensors.png', dpi=300)
     plt.close()
 
     # img = Xsmall[0, :] + Xmean
@@ -425,9 +425,9 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean):
     # #plt.savefig('results/flow_truth.png', dpi=300)
     # plt.close()
 
-def plot_flow_cyliner_2(img_epoch, m, n, Xmean):
+def plot_flow_cyliner_2(img_epoch, m, n, Xmean, re):
     import cmocean
-
+    #TODO: change the font to Seriff
     x2 = np.arange(0, n, 1)
     y2 = np.arange(0, m, 1)
     mX, mY = np.meshgrid(x2, y2)
@@ -436,7 +436,7 @@ def plot_flow_cyliner_2(img_epoch, m, n, Xmean):
 
     minmax = np.max(np.abs(img_epoch)) * 0.65
     #plt.figure(facecolor="white", edgecolor='k', figsize=(7.9, 4.7))
-    fig, ax = plt.subplots(figsize=(16, 6))
+    fig, ax = plt.subplots(figsize=(6, 6))
     # im = plt.imshow(img_epoch, cmap=cmocean.cm.thermal, interpolation='none', vmin=-minmax, vmax=minmax)
     # plt.contourf(mX, mY, img_epoch, 80, cmap=cmocean.cm.thermal, alpha=1, vmin=-minmax, vmax=minmax)
 
@@ -451,8 +451,8 @@ def plot_flow_cyliner_2(img_epoch, m, n, Xmean):
     plt.axis('off')
     plt.title('Reconstructed flow')
     #plt.tight_layout()
-    plt.show()
-    #plt.savefig('results/reconstruction_via_shallow_decoder.png', dpi=300)
+    #plt.show()
+    plt.savefig(f'out/{re}/reconstruction_via_shallow_decoder.png', dpi=300)
     plt.close()
 
 
@@ -482,7 +482,7 @@ def plot_flow_cyliner_2(img_epoch, m, n, Xmean):
 #     plt.close()
 
 
-def plot_flow_cyliner_pod(Xsmall, sensors, Xmean, sensor_locations, m, n):
+def plot_flow_cyliner_pod(Xsmall, sensors, Xmean, sensor_locations, m, n, re):
     import cmocean
 
     x2 = np.arange(0, 384, 1)
@@ -515,7 +515,7 @@ def plot_flow_cyliner_pod(Xsmall, sensors, Xmean, sensor_locations, m, n):
     plt.title('Reconstructed flow filed using POD')
     plt.tight_layout()
     # plt.show()
-    plt.savefig('results/reconstruction_via_pod.png', dpi=300)
+    plt.savefig(f'out/{re}/reconstruction_via_pod.png', dpi=300)
     plt.close()
 
 

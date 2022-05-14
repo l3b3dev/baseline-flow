@@ -27,23 +27,23 @@ def rescale(Xsmall, Xsmall_test):
 
 
 def flow_cylinder():
-    #X = np.load('data/flow_cylinder.npy')
-    X = np.load('data/cyl2dflow.npy')
+    # X = np.load('data/flow_cylinder.npy')
+    X = np.load('data/cavflow/cavflow30000.npy')
     print(X.shape)
 
     # Split into train and test set
     # Xsmall = X[0:100, :, :]
     # t, m, n = Xsmall.shape
-    #Xsmall = X[0:700, 0, 100:300, 100:700 ]
-    Xsmall = X[0:700, 0, 100:300, 130:500]
+    # Xsmall = X[0:700, 0, 100:300, 100:700 ]
+    Xsmall = X[0:5000, 0, :, :]
     t, n, m = Xsmall.shape
 
-    #Xsmall = Xsmall.reshape(100, -1)
-    #Xsmall = Xsmall.reshape(700, -1)
-    Xsmall = Xsmall.reshape(700, -1)
+    # Xsmall = Xsmall.reshape(100, -1)
+    # Xsmall = Xsmall.reshape(700, -1)
+    Xsmall = Xsmall.reshape(5000, -1)
 
-    #Xsmall_test = X[100:151, :, :].reshape(51, -1)
-    Xsmall_test = X[700:1000,0, 100:300, 130:500 ].reshape(300, -1)
+    # Xsmall_test = X[100:151, :, :].reshape(51, -1)
+    Xsmall_test = X[5000:, 0, :, :].reshape(1001, -1)
 
     # ******************************************************************************
     # Return train and test set
