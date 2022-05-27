@@ -28,7 +28,7 @@ def rescale(Xsmall, Xsmall_test):
 
 def flow_cylinder():
     # X = np.load('data/flow_cylinder.npy')
-    X = np.load('data/cavflow/cavflow30000.npy')
+    X = np.load('data/cavflow/cavflow15500.npy')
     print(X.shape)
 
     # Split into train and test set

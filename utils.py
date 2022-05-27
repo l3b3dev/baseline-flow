@@ -384,8 +384,8 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean, re):
     #plt.contourf(mX, mY, img, 80, cmap=cmocean.cm.thermal, alpha=1, vmin=-minmax, vmax=minmax)
     #plt.contour(mX, mY, img, 80, colors='black', alpha=0.5, vmin=-minmax, vmax=minmax)
     #im = plt.imshow(img, cmap=cmocean.cm.thermal, interpolation='none', vmin=-minmax, vmax=minmax)
-    c = ax.pcolormesh(mX, mY, img, cmap='coolwarm', vmin=-minmax, vmax=minmax)
-    ax.axis([mX.min(), mX.max(), mY.min(), mY.max()])
+    c = ax.pcolormesh(mX, -mY, img, cmap='coolwarm', vmin=-minmax, vmax=minmax)
+    #ax.axis([mX.min(), mX.max(), mY.min(), mY.max()])
     fig.colorbar(c, ax=ax)
 
     # wedge = mpatches.Wedge((0, 99), 33, 270, 90, ec="#636363", color='#636363', lw=5, zorder=200)
@@ -402,7 +402,7 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean, re):
     x_sensors = xv.reshape(1, m * n)[:, sensor_locations]
     y_sensors = yv.reshape(1, m * n)[:, sensor_locations]
 
-    plt.scatter(x_sensors, y_sensors, marker='.', color='purple', s=500, zorder=5)
+    plt.scatter(x_sensors, -y_sensors, marker='.', color='purple', s=500, zorder=5)
     plt.title('Truth with sensor locations')
     #plt.show()
     plt.savefig(f'out/{re}/flow_truth_with_sensors.png', dpi=300)
@@ -425,7 +425,7 @@ def plot_flow_cyliner(Xsmall, sensor_locations, m, n, Xmean, re):
     # #plt.savefig('results/flow_truth.png', dpi=300)
     # plt.close()
 
-def plot_flow_cyliner_2(img_epoch, m, n, Xmean, re):
+def plot_flow_cyliner_2(img_epoch, m, n, Xmean, re, v=1):
     import cmocean
     #TODO: change the font to Seriff
     x2 = np.arange(0, n, 1)
@@ -440,8 +440,8 @@ def plot_flow_cyliner_2(img_epoch, m, n, Xmean, re):
     # im = plt.imshow(img_epoch, cmap=cmocean.cm.thermal, interpolation='none', vmin=-minmax, vmax=minmax)
     # plt.contourf(mX, mY, img_epoch, 80, cmap=cmocean.cm.thermal, alpha=1, vmin=-minmax, vmax=minmax)
 
-    c = ax.pcolormesh(mX, mY, img_epoch, cmap='coolwarm', vmin=-minmax, vmax=minmax)
-    ax.axis([mX.min(), mX.max(), mY.min(), mY.max()])
+    c = ax.pcolormesh(mX, -mY, img_epoch, cmap='coolwarm', vmin=-minmax, vmax=minmax)
+    #ax.axis([mX.min(), mX.max(), mY.min(), mY.max()])
     fig.colorbar(c, ax=ax)
 
     #wedge = mpatches.Wedge((0, 99), 33, 270, 90, ec="#636363", color='#636363', lw=5)
@@ -452,7 +452,7 @@ def plot_flow_cyliner_2(img_epoch, m, n, Xmean, re):
     plt.title('Reconstructed flow')
     #plt.tight_layout()
     #plt.show()
-    plt.savefig(f'out/{re}/reconstruction_via_shallow_decoder.png', dpi=300)
+    plt.savefig(f'out/{re}/reconstruction_via_shallow_decoder{v}.png', dpi=300)
     plt.close()
 
 

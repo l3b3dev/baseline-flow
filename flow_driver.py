@@ -14,6 +14,7 @@ import argparse
 
 mpl.style.available
 mpl.style.use('seaborn-paper')
+plt.rcParams.update({'font.size': 20})
 
 # ==============================================================================
 # Training settings
@@ -241,7 +242,7 @@ for file in os.listdir(directory):
             if dataset == 'flow_cylinder':
                 plot_flow_cyliner_2(output_temp.cpu().data.numpy()[390, :, :].reshape(n, m), n, m, Xmean, re)
                 #plot error
-                #plot_flow_cyliner_2(np.abs(Xsmall[390, :].cpu().data.numpy().reshape(n,m) - output_temp.cpu().data.numpy()[390, :, :].reshape(n, m)), n, m, Xmean)
+                plot_flow_cyliner_2(np.abs(Xsmall[390, :].cpu().data.numpy().reshape(n,m) - output_temp.cpu().data.numpy()[390, :, :].reshape(n, m)), n, m, Xmean, re,2)
 
             del (dataloader_temp, output_temp)
 
