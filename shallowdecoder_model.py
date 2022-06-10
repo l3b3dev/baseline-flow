@@ -62,19 +62,19 @@ class ShallowDecoderDrop(nn.Module):
         self.outputlayer_size = outputlayer_size
 
         self.learn_features = nn.Sequential(
-            nn.Linear(n_sensors, 200),
+            nn.Linear(n_sensors, 2000),
             nn.ReLU(True),
             nn.BatchNorm1d(1),
         )
 
         self.learn_coef = nn.Sequential(
-            nn.Linear(200, 950),
+            nn.Linear(2000, 2500),
             nn.ReLU(True),
             nn.BatchNorm1d(1),
         )
 
         self.learn_dictionary = nn.Sequential(
-            nn.Linear(950, self.outputlayer_size),
+            nn.Linear(2500, self.outputlayer_size),
         )
 
         for m in self.modules():
