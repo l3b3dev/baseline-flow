@@ -20,7 +20,7 @@ def extend(model, input_shape):
 
     x = torch.zeros((1,) + input_shape, device=device)
     with torch.no_grad():
-        for module in model.children():
+        for module in model.layers.children():
             y = module(x)
             if sum(p.numel() for p in module.parameters()):
                 # for all layers with parameters

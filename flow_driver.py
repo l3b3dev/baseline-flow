@@ -6,6 +6,7 @@ from torch import nn
 from torch.autograd import Variable, Function
 from torch.utils.data import DataLoader, Dataset
 
+from jacobian import extend, JacobianMode
 from read_dataset import data_from_name
 from shallowdecoder_model import model_from_name, ShallowDecoder
 from utils import *
@@ -235,7 +236,8 @@ for file in os.listdir(directory):
         if plotting:
             model.eval()
             dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots_train))
-            output_temp = model(Variable(dataloader_temp.next()).float().cuda())
+            input_vec = Variable(dataloader_temp.next()).float().cuda()
+            output_temp = model(input_vec)
 
             #output_temp = model(Variable(dataloader_temp.next()).float().cpu())
 
@@ -357,6 +359,18 @@ for file in os.listdir(directory):
         plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
                       n_snapshots_train, n_snapshots_test,
                       model, Xmean, sensor_locations, plotting, train_or_test='training', re=re)
+
+
+
+    #run sensitivity
+    extend(model, (1, n_sensors))
+
+    # Jacobian computed by the improved method
+    with JacobianMode(model):
+        out = model(input_vec)
+        out.sum().backward()
+        #jacobian tensor from which we calc. sensitivity
+        jac = model.jacobian()
 
     # if plotting:
     #     plot_flow_cyliner_pod(Xsmall, sensors, Xmean, sensor_locations, m, n, re)
