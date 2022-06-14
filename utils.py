@@ -83,25 +83,18 @@ def add_channels(X):
         return "dimenional error"
 
 
-def error_summary(sensors, Xsmall, n_snapshots, model, Xmean, train_or_test='training'):
+def error_summary(X, Y, n_snapshots, model, train_or_test='training'):
     from torch.autograd import Variable, Function
     from torch.utils.data import DataLoader, Dataset
 
     # ===================compute relative error train========================
-    dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots))
+    dataloader_temp = iter(DataLoader(X, batch_size=n_snapshots))
     output_temp = model(Variable(dataloader_temp.next()).cuda().float())
     tt, _, mt = output_temp.shape
 
     redata = output_temp.cpu().data.numpy()
-    error = np.linalg.norm(Xsmall.data.numpy() - redata) / np.linalg.norm(Xsmall.data.numpy())
+    error = np.linalg.norm(Y.data.numpy() - redata) / np.linalg.norm(Y.data.numpy())
     string_output = 'Relative deviation error ' + train_or_test + ' :'
-    print(string_output, error)
-
-    # error for original data
-    redata = redata + Xmean
-    Xsmall_temp = Xsmall.data.numpy() + Xmean
-    error = np.linalg.norm(Xsmall_temp - redata) / np.linalg.norm(Xsmall_temp)
-    string_output = 'Relative error ' + train_or_test + ' :'
     print(string_output, error)
 
     return error
@@ -319,9 +312,7 @@ def plot_spectrum(sensors, Xsmall, sensors_test, Xsmall_test,
     plt.close()
 
 
-def plot_dominant_modes(sensors, Xsmall, sensors_test, Xsmall_test,
-                        n_snapshots, n_snapshots_test,
-                        model, Xmean, sensor_locations, m, n):
+def plot_dominant_modes(X, Y, X_test, Y_test, n_snapshots_train, n_snapshots_test, model, scaler, n, m):
     from torch.autograd import Variable, Function
     from torch.utils.data import DataLoader, Dataset
     from torch import nn
@@ -330,7 +321,7 @@ def plot_dominant_modes(sensors, Xsmall, sensors_test, Xsmall_test,
     phi = model.learn_dictionary[0].weight.data
     phi_n = normalize(phi, axis=0)
 
-    dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots))
+    dataloader_temp = iter(DataLoader(X, batch_size=n_snapshots_train))
     in_data = Variable(dataloader_temp.next()).cpu().float()
     output_temp = model(in_data)
 
@@ -352,10 +343,10 @@ def plot_dominant_modes(sensors, Xsmall, sensors_test, Xsmall_test,
     mX, mY = np.meshgrid(x2, y2)
 
     # top 5 dom modes
-    # ii=1
+    # ii = 1
     # for i in top5_sorted:
-    #     img_epoch = phi_n[:,i].reshape(m, n)
-    #     #img_epoch += Xmean.reshape(m, n)
+    #     img_epoch = phi_n[:, i].reshape(m, n)
+    #     # img_epoch += Xmean.reshape(m, n)
     #
     #     minmax = np.max(np.abs(img_epoch)) * 0.65
     #     # plt.figure(facecolor="white", edgecolor='k', figsize=(7.9, 4.7))
@@ -373,45 +364,15 @@ def plot_dominant_modes(sensors, Xsmall, sensors_test, Xsmall_test,
     #     # plt.title('Epoch number ' + str(epoch), fontsize = 16 )
     #     plt.axis('off')
     #     plt.title(f'{ii} dominant mode for source data')
-    #     ii+=1
+    #     ii += 1
     #     # plt.tight_layout()
     #     plt.show()
     #     # plt.savefig('results/reconstruction_via_shallow_decoder.png', dpi=300)
     #     plt.close()
-    #
-    # plt.figure(facecolor="white", figsize=(20, 12), edgecolor='k')
-    # plt.loglog(np.arange(len(an_rms)) + 1, -np.sort(-an_rms),
-    #            marker="o", label='RMS Shallow Decoder', c='#de2d26', lw=4, markersize=6)
-    # plt.show()
 
-    tt, _, mt = output_temp.shape
-    #
-    redata = output_temp.cpu().data.numpy().reshape(tt, mt)
-    Xsmall_temp = Xsmall.data.numpy().reshape(tt, mt)
-
-    u, s, v = np.linalg.svd(Xsmall_temp.T, 0)  # POD on the true data, modes: u, coeffs: 'technically, s*v
-    u2, s2, v2 = np.linalg.svd(redata.T, 0)
-
-    # Linear reconstruction using PCA
-    n_sensors = len(sensor_locations)
-    linear_coef = (np.linalg.pinv(u[sensor_locations, 0:n_sensors])).dot(
-        sensors.cpu().data.numpy().reshape(tt, n_sensors).T)
-    redata_linear = (u[:, 0:n_sensors].dot(linear_coef)).T
-
-    u3, s3, v3 = np.linalg.svd(redata_linear.T, 0)
-
-    plt.figure(facecolor="white", figsize=(10.0, 6.5), edgecolor='k')
-    # showing the true value of the data
-    plt.loglog(np.arange(len(s)) + 1, s, label='True spectrum',
-               marker="o", lw=6, c='k', markersize=15)
-
-    plt.loglog(np.arange(len(s2)) + 1, s2, label='From SVD on shallow',
-               marker="o", c='#de2d26', lw=4, markersize=6)
-    plt.loglog(np.arange(len(s)) + 1, s3, '--',
-               label='POD', marker="s", c='#3182bd', lw=4, markersize=6)
+    plt.figure(facecolor="white", figsize=(20, 12), edgecolor='k')
     plt.loglog(np.arange(len(an_rms)) + 1, -np.sort(-an_rms),
-               marker="o", label='RMS Shallow Decoder', c='g', lw=4, markersize=6)
-
+               marker="o", label='RMS Shallow Decoder', c='#de2d26', lw=4, markersize=6)
     plt.tick_params(axis='x', labelsize=22)
     plt.tick_params(axis='y', labelsize=22)
     # plt.locator_params(axis='y', nbins=4)
@@ -420,12 +381,55 @@ def plot_dominant_modes(sensors, Xsmall, sensors_test, Xsmall_test,
     plt.ylabel('Magnitude', fontsize=28)
     plt.xlabel('Number of singular value', fontsize=28)
     plt.grid(False)
+    plt.title('RMS Dominant modes', fontsize=36)
     # plt.yscale("log")
     # ax[0].set_ylim([0.01,1])
     plt.legend(fontsize=22)
     plt.tight_layout()
-
     plt.show()
+
+    # tt, _, mt = output_temp.shape
+    # #
+    # redata = output_temp.cpu().data.numpy().reshape(tt, mt)
+    # Xsmall_temp = Xsmall.data.numpy().reshape(tt, mt)
+    #
+    # u, s, v = np.linalg.svd(Xsmall_temp.T, 0)  # POD on the true data, modes: u, coeffs: 'technically, s*v
+    # u2, s2, v2 = np.linalg.svd(redata.T, 0)
+    #
+    # # Linear reconstruction using PCA
+    # n_sensors = len(sensor_locations)
+    # linear_coef = (np.linalg.pinv(u[sensor_locations, 0:n_sensors])).dot(
+    #     sensors.cpu().data.numpy().reshape(tt, n_sensors).T)
+    # redata_linear = (u[:, 0:n_sensors].dot(linear_coef)).T
+    #
+    # u3, s3, v3 = np.linalg.svd(redata_linear.T, 0)
+    #
+    # plt.figure(facecolor="white", figsize=(10.0, 6.5), edgecolor='k')
+    # # showing the true value of the data
+    # plt.loglog(np.arange(len(s)) + 1, s, label='True spectrum',
+    #            marker="o", lw=6, c='k', markersize=15)
+    #
+    # plt.loglog(np.arange(len(s2)) + 1, s2, label='From SVD on shallow',
+    #            marker="o", c='#de2d26', lw=4, markersize=6)
+    # plt.loglog(np.arange(len(s)) + 1, s3, '--',
+    #            label='POD', marker="s", c='#3182bd', lw=4, markersize=6)
+    # plt.loglog(np.arange(len(an_rms)) + 1, -np.sort(-an_rms),
+    #            marker="o", label='RMS Shallow Decoder', c='g', lw=4, markersize=6)
+    #
+    # plt.tick_params(axis='x', labelsize=22)
+    # plt.tick_params(axis='y', labelsize=22)
+    # # plt.locator_params(axis='y', nbins=4)
+    # # plt.locator_params(axis='x', nbins=4)
+    #
+    # plt.ylabel('Magnitude', fontsize=28)
+    # plt.xlabel('Number of singular value', fontsize=28)
+    # plt.grid(False)
+    # # plt.yscale("log")
+    # # ax[0].set_ylim([0.01,1])
+    # plt.legend(fontsize=22)
+    # plt.tight_layout()
+    #
+    # plt.show()
 
     # top 5 dom modes
     # for i in range(0,5):
