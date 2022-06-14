@@ -14,7 +14,7 @@ mpl.style.available
 mpl.style.use('seaborn-paper')
 
 total_runs = 1
-num_epochs = 400
+num_epochs = 230
 batch_size = 100
 n_sensors = 49
 learning_rate = 1e-2
@@ -122,65 +122,62 @@ for runs in range(total_runs):
     # ******************************************************************************
     t0 = timeit.default_timer()
 
-    # for epoch in range(num_epochs):
-    #
-    #     for batch_idx, (data, target) in enumerate(train_loader):
-    #         data, target = data.cuda(), target.cuda()
-    #         data, target = Variable(data).float(), Variable(target).float()
-    #
-    #         # ===================forward=====================
-    #         model.train()
-    #         output = model(data)
-    #         loss = criterion(output, target)
-    #
-    #         # ===================backward====================
-    #         optimizer.zero_grad()
-    #         loss.backward()
-    #         optimizer.step()
-    #
-    #         # ===================adjusted lr========================
-    #         exp_lr_scheduler(optimizer, epoch, lr_decay_rate=learning_rate_change,
-    #                          weight_decay_rate=weight_decay_change,
-    #                          lr_decay_epoch=epoch_update)
-    #
-    #     if epoch % 5 == 0:
-    #         print('********** Epoche %s **********' % (epoch))
-    #         rerror_train.append(error_summary(X, Y, n_snapshots_train, model.eval(), 'training'))
-    #         rerror_test.append(
-    #             error_summary(X_test, Y_test, n_snapshots_test, model.eval(), 'testing'))
+    for epoch in range(num_epochs):
 
-    model = ShallowDecoderDrop(outputlayer_size=outputlayer_size, n_sensors=n_sensors)
-    model.load_state_dict(torch.load("./deepDecoder_flow_0049.pth", map_location="cpu"))
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data, target = data.cuda(), target.cuda()
+            data, target = Variable(data).float(), Variable(target).float()
 
+            # ===================forward=====================
+            model.train()
+            output = model(data)
+            loss = criterion(output, target)
 
+            # ===================backward====================
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # ===================adjusted lr========================
+            exp_lr_scheduler(optimizer, epoch, lr_decay_rate=learning_rate_change,
+                             weight_decay_rate=weight_decay_change,
+                             lr_decay_epoch=epoch_update)
+
+        if epoch % 5 == 0:
+            print('********** Epoche %s **********' % (epoch))
+            rerror_train.append(error_summary(X, Y, n_snapshots_train, model.eval(), 'training'))
+            rerror_test.append(
+                error_summary(X_test, Y_test, n_snapshots_test, model.eval(), 'testing'))
 
     # ******************************************************************************
     # Save model
     # ******************************************************************************
-    #torch.save(model.state_dict(), './deepDecoder_flow_0049.pth')
+    torch.save(model.state_dict(), './deepDecoder_flow_0049.pth')
 
+    model = ShallowDecoderDrop(outputlayer_size=outputlayer_size, n_sensors=n_sensors)
+    model.load_state_dict(torch.load("./deepDecoder_flow_0049.pth", map_location="cpu"))
 
-    # # ******************************************************************************
-    # # Error plots
-    # # ******************************************************************************
-    # fig = plt.figure()
-    # plt.plot(rerror_train, lw=2, label='Trainings error', color='#377eb8', )
-    # plt.plot(rerror_test, lw=2, label='Test error', color='#e41a1c', )
-    #
-    # plt.tick_params(axis='x', labelsize=14)
-    # plt.tick_params(axis='y', labelsize=14)
-    # plt.locator_params(axis='y', nbins=10)
-    # plt.locator_params(axis='x', nbins=10)
-    #
-    # plt.ylabel('Error', fontsize=14)
-    # plt.xlabel('Epochs', fontsize=14)
-    # plt.grid(False)
-    # plt.yscale("log")
-    # # ax[0].set_ylim([0.01,1])
-    # plt.legend(fontsize=14)
-    # fig.tight_layout()
-    # plt.show()
-    # #plt.savefig('results/shallow_decoder_convergence.png', dpi=300)
-    # plt.close()
+    # ******************************************************************************
+    # Error plots
+    # ******************************************************************************
+    fig = plt.figure()
+    plt.plot(rerror_train, lw=2, label='Trainings error', color='#377eb8', )
+    plt.plot(rerror_test, lw=2, label='Test error', color='#e41a1c', )
+
+    plt.tick_params(axis='x', labelsize=14)
+    plt.tick_params(axis='y', labelsize=14)
+    plt.locator_params(axis='y', nbins=10)
+    plt.locator_params(axis='x', nbins=10)
+
+    plt.ylabel('Error', fontsize=14)
+    plt.xlabel('Epochs', fontsize=14)
+    plt.grid(False)
+    plt.yscale("log")
+    # ax[0].set_ylim([0.01,1])
+    plt.legend(fontsize=14)
+    fig.tight_layout()
+    plt.show()
+    #plt.savefig('results/shallow_decoder_convergence.png', dpi=300)
+    plt.close()
 
 plot_dominant_modes(X, Y, X_test, Y_test,n_snapshots_train, n_snapshots_test, model, scaler, n,m)
