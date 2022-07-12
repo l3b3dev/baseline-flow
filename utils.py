@@ -17,7 +17,8 @@ def sensor_from_name(name, Xsmall, Xsmall_test, sensor_num=64, fix_sensor=10, ra
 
     elif name == 'wall':
         return _set_sensor_wall(Xsmall, Xsmall_test, sensor_num=sensor_num, random_seed=random_seed, m=m, n=n)
-
+    elif name == 'grid':
+        return _set_sensor_grid(Xsmall, Xsmall_test, sensor_num = sensor_num, random_seed = random_seed)
     raise ValueError('sensor strategy {} not recognized'.format(name))
 
 
@@ -30,7 +31,23 @@ def _set_sensor_leverage_score(Xsmall, Xsmall_test, sensor_num=64, random_seed=1
     U, s, Q = np.linalg.svd(scale(Xsmall, axis=1, with_mean=False, with_std=False, copy=True), full_matrices=False)
     lev_score = np.sum(Q ** 2, axis=0)
 
-    pivots = np.random.choice(range(n_pix), sensor_num, replace=False, p=lev_score / (n_snapshots_train))
+    probabilities = lev_score/ n_snapshots_train
+    probabilities = probabilities / np.sum(probabilities)
+    pivots = np.random.choice(range(n_pix), sensor_num, replace=False, p=probabilities)
+
+    sensors = Xsmall[:, pivots].reshape(n_snapshots_train, sensor_num)
+    #sensors = Xsmall
+    sensors_test = Xsmall_test[:, pivots].reshape(n_snapshots_test, sensor_num)
+
+    return sensors, sensors_test, pivots
+
+# Leverage score
+def _set_sensor_grid(Xsmall, Xsmall_test, sensor_num=64, random_seed=12345):
+    np.random.seed(random_seed)
+    n_snapshots_train, n_pix = Xsmall.shape
+    n_snapshots_test, _ = Xsmall_test.shape
+    
+    pivots = np.linspace(0,n_pix-1, sensor_num,dtype=int)
 
     sensors = Xsmall[:, pivots].reshape(n_snapshots_train, sensor_num)
     #sensors = Xsmall
@@ -81,13 +98,16 @@ def add_channels(X):
         return "dimenional error"
 
 
-def error_summary(sensors, Xsmall, n_snapshots, model, Xmean, train_or_test='training'):
+def error_summary(sensors, Xsmall, n_snapshots, model, Xmean, train_or_test='training', cuda = True):
     from torch.autograd import Variable, Function
     from torch.utils.data import DataLoader, Dataset
 
     # ===================compute relative error train========================
     dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots))
-    output_temp = model(Variable(dataloader_temp.next()).cuda().float())
+    if cuda:
+        output_temp = model(Variable(dataloader_temp.next()).cuda().float())
+    else: 
+        output_temp = model(Variable(dataloader_temp.next()).float())
     tt, _, mt = output_temp.shape
 
     redata = output_temp.cpu().data.numpy()
@@ -105,12 +125,15 @@ def error_summary(sensors, Xsmall, n_snapshots, model, Xmean, train_or_test='tra
     return error
 
 
-def final_summary(sensors, Xsmall, n_snapshots, model, Xmean, sensor_locations):
+def final_summary(sensors, Xsmall, n_snapshots, model, Xmean, sensor_locations, use_cuda = True):
     from torch.autograd import Variable, Function
     from torch.utils.data import DataLoader, Dataset
 
     dataloader_temp = iter(DataLoader(sensors, batch_size=n_snapshots))
-    output_temp = model(Variable(dataloader_temp.next()).cuda().float())
+    if use_cuda : 
+        output_temp = model(Variable(dataloader_temp.next()).cuda().float())
+    else :
+        output_temp = model(Variable(dataloader_temp.next()).float())
     tt, _, mt = output_temp.shape
     #        
     redata = output_temp.cpu().data.numpy().reshape(tt, mt)

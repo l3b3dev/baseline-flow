@@ -2,9 +2,10 @@ import torch
 from torch import nn
 import types
 from functools import partial
+import numpy as np
 
 
-def extend(model, input_shape):
+def extend(model, input_shape, logging = 0):
     if not isinstance(model, nn.Module):
         raise TypeError("model should be a nn.Module")
     if not isinstance(input_shape, tuple):
@@ -17,14 +18,22 @@ def extend(model, input_shape):
     weight_repeat_list = []
     bias_output_list = []
     bias_repeat_list = []
-
+    
+    if logging:
+        i_module = 0
     x = torch.zeros((1,) + input_shape, device=device)
     with torch.no_grad():
         for module in model.layers.children():
+            if logging:
+                i_module+=1
+                i_param = 0
             y = module(x)
             if sum(p.numel() for p in module.parameters()):
                 # for all layers with parameters
-
+                if logging : 
+                    i_param +=1
+                    print("Computing (Module, param): (" + str(i_module)+ ","\
+                          +str(i_param)+ ")")
                 # store parameters and clear bias for future calculation
                 if module.weight is not None:
                     initial_weight = module.weight.data.clone()
@@ -34,8 +43,10 @@ def extend(model, input_shape):
 
                 if module.weight is not None:
                     Nweight = module.weight.numel()
-                    weight_input = []
-                    weight_output = []
+                    if logging: 
+                        print("    Computing backprop for Nweights: " + str(Nweight))
+                    weight_input = [0] * Nweight
+                    weight_output = [0] * Nweight
                     weight_repeat = torch.zeros(
                         Nweight, dtype=torch.long, device=device
                     )
@@ -53,20 +64,28 @@ def extend(model, input_shape):
                                 "the network is not written in the standard form, see https://github.com/ChenAo-Phys/pytorch-Jacobian"
                             )
                         nonzero = torch.nonzero(out > 0.5, as_tuple=False)
-                        weight_input.append(nonzero[:, 0])
-                        weight_output.append(nonzero[:, 1])
+                        weight_input[i]=nonzero[:, 0]
+                        weight_output[i]=nonzero[:, 1]
                         weight_repeat[i] = nonzero.shape[0]
+                        
+                        if logging:
+                            if not i % 10000 :
+                                print("    Completed weight: " +str(i))
                     weight_input_list.append(torch.cat(weight_input, dim=0))
                     weight_output_list.append(torch.cat(weight_output, dim=0))
                     weight_repeat_list.append(weight_repeat)
                     module.weight.data = initial_weight
                 else:
+                    if logging: 
+                        print("    No weights to compute backprop")
                     weight_input_list.append(None)
                     weight_output_list.append(None)
                     weight_repeat_list.append(None)
 
                 if module.bias is not None:
                     Nbias = module.bias.numel()
+                    if logging: 
+                        print("    Computing backprop for Nbias: " + str(Nbias))
                     bias_output = []
                     bias_repeat = torch.zeros(Nbias, dtype=torch.long, device=device)
                     for i in range(Nbias):
@@ -85,6 +104,8 @@ def extend(model, input_shape):
                     bias_repeat_list.append(bias_repeat)
                     module.bias.data = initial_bias
                 else:
+                    if logging:
+                        print("    No biases to compute backprop")
                     bias_output_list.append(None)
                     bias_repeat_list.append(None)
 
@@ -118,7 +139,7 @@ def extend(model, input_shape):
 
         device = next(model.parameters()).device
         jac = []
-        layer = 0
+        layer = 0      #Only compute partials of first layer
         for module in self.children():
             if sum(p.numel() for p in module.parameters()):
                 weight_input = weight_input_list[layer]
@@ -209,6 +230,6 @@ class JacobianMode:
         for hook in self.backward_hook:
             hook.remove()
 
-        del self.model.input_shape
-        del self.model.x_in
-        del self.model.gradient
+        #del self.model.input_shape
+        #del self.model.x_in
+        #del self.model.gradient
