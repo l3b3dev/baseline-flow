@@ -416,10 +416,13 @@ if model_name.lower()[0:27] == "shallow_decoder_sensitivity":
     #run sensitivity
     if logging:
         print("Extending model for sensitivity")
-    extend(model, (1, n_sensors), logging = logging)
+    extend(model, (1, n_sensors), logging = logging) 
     if logging:
-        print("Model extended")
+        print('********** Model extension Time**********')
+        print('Time: ', timeit.default_timer()-t1)
+    
     # Jacobian computed by the improved method
+    t2 = timeit.default_timer()
     with JacobianMode(model):
         if logging:
             print("Computing outputs")
@@ -432,11 +435,9 @@ if model_name.lower()[0:27] == "shallow_decoder_sensitivity":
             print("Computing Jacobian")
         jac = model.jacobian().numpy()
         jac = jac[:,0:n_sensors*50].reshape((n_snapshots_train, n_sensors, 50))
-        
-    time_jac.append(timeit.default_timer() - t1)
-
-    print('********** Jacobian time**********')
-    print('Time: ', time_jac[-1])
+    if logging:
+        print('********** Jacobian Caclulation Time**********')
+        print('Time: ', timeit.default_timer()-t2)
 #Save results
 if model_name.lower()[0:27] == "shallow_decoder_sensitivity":
     np.savez("results/network_sens_s"+str(n_sensors)+ \

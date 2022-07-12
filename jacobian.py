@@ -68,7 +68,7 @@ def extend(model, input_shape, logging = 0):
                         weight_output[i]=nonzero[:, 1]
                         weight_repeat[i] = nonzero.shape[0]
                         
-                        if logging:
+                        if logging > 1:
                             if not i % 10000 :
                                 print("    Completed weight: " +str(i))
                     weight_input_list.append(torch.cat(weight_input, dim=0))

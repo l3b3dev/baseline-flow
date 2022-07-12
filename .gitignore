@@ -151,3 +151,7 @@ crashlytics-build.properties
 fabric.properties
 *.npz
 *.npy
+
+*.pdf
+
+*.png
