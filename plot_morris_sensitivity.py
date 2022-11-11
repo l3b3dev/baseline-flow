@@ -14,11 +14,15 @@ from  matplotlib.colors import Normalize as NormalizeCbar
 def main(argv=None):
     n_sensors =25
     n_samp = 20
-    pert = 20
+    pert = 10
+    if pert == 10:
+        placement = "leverage"
+    elif pert == 20:
+        placement = "grid"
     s = 80
-    if pert == 20:
+    if placement == "grid":
         savefolder = "plots/grid"
-    elif pert == 10:
+    elif placement == "leverage":
         savefolder = "plots/"
         
     
@@ -39,11 +43,18 @@ def main(argv=None):
     
     morris_mean_abs155 = sens_data155["morris_mean_abs"][:,1].reshape(n_sensors,2)
     morris_std155 = sens_data155["morris_std"][:,1].reshape(n_sensors,2)
-    sensor_locations_2D155 = sens_data155["base_sensors"]
+    if placement == "grid":
+        sensor_locations_2D155 = sens_data155["base_sensors"]
+    elif placement == "leverage":
+        sensor_locations_2D155 = sens_data155["base_sensors_2D"]
     
     morris_mean_abs300 = sens_data300["morris_mean_abs"][:,1].reshape(n_sensors,2)
     morris_std300 = sens_data300["morris_std"][:,1].reshape(n_sensors,2)
-    sensor_locations_2D300 = sens_data300["base_sensors"]
+    if placement == "grid":
+        sensor_locations_2D300 = sens_data300["base_sensors"]
+    elif placement == "leverage":
+        sensor_locations_2D300 = sens_data300["base_sensors_2D"]
+        
     
     m = 130
     n = 130
@@ -114,7 +125,7 @@ def main(argv=None):
 
 
 def plot_ReSingle(savename, Morris, pos, flow, title, colorbarlabel, \
-                  figsize= (4.2,3.2), s=30, c_flow = 'jet', c_bar = 'inferno'):
+                  figsize= (4.4,4.1), s=10, c_flow = 'jet', c_bar = 'inferno'):
     n=130
     x_centers = -np.cos(np.pi*np.arange(0,n)/(n-1))
     y_centers = np.cos(np.pi*np.arange(0,n)/(n-1))
@@ -124,6 +135,13 @@ def plot_ReSingle(savename, Morris, pos, flow, title, colorbarlabel, \
     cmax = np.max(Morris)
     minmax = np.max(np.abs(flow))
     
+    major_ticks = [-1, -.5, 0, .5, 1]
+    minor_ticks = [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
+    ax.set_xticks(major_ticks, minor = False)
+    ax.set_yticks(major_ticks, minor = False)
+    ax.set_xticks(minor_ticks, minor = True)
+    ax.set_yticks(minor_ticks, minor = True)
+    
     plt.pcolormesh(mX, mY, flow, cmap=c_flow, vmin=-minmax, vmax=minmax)
     sens = plt.scatter(pos[:,0], pos[:,1], s=s, 
                          c=Morris, cmap = c_bar, vmin=cmin, vmax= cmax,
@@ -131,18 +149,18 @@ def plot_ReSingle(savename, Morris, pos, flow, title, colorbarlabel, \
     
     #ax.title.set_text(title)
     ax.set_aspect("equal")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    ax.set_xlabel("x", fontsize = 12)
+    ax.set_ylabel("y", fontsize = 12)
     #fig.subplots_adjust(right=0.8)
     #cbar_ax = fig.add_axes([0.85, 0.15, .05, 1])
-    cbar = fig.colorbar(sens)
+    cbar = fig.colorbar(sens, fraction=0.046, pad=0.04)
     #cbar = fig.colorbar(sens, ax=cbar_ax)
     #cbar_ax.axis("off")
     cbar.set_label(colorbarlabel, rotation = 270, labelpad = 20, fontsize = 12)
 
     fig.tight_layout()
-    plt.savefig(savename + ".pdf")
-    plt.savefig(savename + ".png")
+    plt.savefig(savename + ".pdf", bbox_inches='tight', pad_inches = 0)
+    plt.savefig(savename + ".png", bbox_inches='tight', pad_inches = 0)
 
 
 def plot_ReSubplot(savename, Morris1 ,Morris2, pos1, pos2, flow1, flow2, title1, \
@@ -185,12 +203,12 @@ def plot_ReSubplot(savename, Morris1 ,Morris2, pos1, pos2, flow1, flow2, title1,
                         ax=ax.ravel().tolist(), shrink=0.95)
     #cbar = fig.colorbar(sens, ax=cbar_ax)
     #cbar_ax.axis("off")
-    cbar.set_label(colorbarlabel, rotation = 270, labelpad = 20, fontsize = 12)
+    cbar.set_label(colorbarlabel, rotation = 270, labelpad = 20, fontsize = 14)
     ax[1].title.set_text(title2)
 
     #plt.tight_layout()
-    plt.savefig(savename + ".pdf")
-    plt.savefig(savename + ".png")
+    plt.savefig(savename + ".pdf", bbox_inches='tight', pad_inches = 0)
+    plt.savefig(savename + ".png", bbox_inches='tight', pad_inches = 0)
     
 if __name__ == "__main__":
     sys.exit(main())
